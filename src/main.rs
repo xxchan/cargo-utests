@@ -6,7 +6,7 @@ fn main() -> anyhow::Result<()> {
     let mut list = nextest_metadata::ListCommand::new();
     // list.add_arg("--all-targets");
     // test default is true for lib, bins, and tests. Do not check examples, benches, etc.
-    list.add_args(["--lib", "--bins", "--tests"]);
+    list.add_args(["--lib", "--bins", "--tests", "--all-features"]);
     tracing::info!("running {:?}", list.cargo_command());
     let list_result = list.exec()?;
     let mut no_tests: HashMap<String, Vec<String>> = HashMap::new();
@@ -21,6 +21,7 @@ fn main() -> anyhow::Result<()> {
 
     let mut metadata = cargo_metadata::MetadataCommand::new();
     metadata.no_deps();
+    metadata.features(cargo_metadata::CargoOpt::AllFeatures);
     tracing::info!("running {:?}", metadata.cargo_command());
     let metadata_result = metadata.exec()?;
 
