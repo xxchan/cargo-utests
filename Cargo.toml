@@ -1,0 +1,22 @@
+[package]
+name = "cargo-utests"
+version = "0.1.0"
+authors = ["xxchan <xxchan22f@gmail.com>"]
+description = "Find unused test targets in Cargo.toml"
+repository = "https://github.com/xxchan/cargo-utests"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+keywords = ["cargo"]
+categories = ["development-tools", "development-tools::cargo-plugins"]
+edition = "2021"
+
+[[bin]]
+name = "cargo-utests"
+test = false
+
+[dependencies]
+anyhow = "1.0.75"
+cargo_metadata = "0.18.1"
+nextest-metadata = "0.9.2"
+tracing = "0.1.40"
+tracing-subscriber = "0.3.17"
