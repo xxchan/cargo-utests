@@ -23,15 +23,19 @@ fn main() -> anyhow::Result<()> {
     metadata.no_deps();
     tracing::info!("running {:?}", metadata.cargo_command());
     let metadata_result = metadata.exec()?;
+
+    let mut fail = false;
     for package in metadata_result.packages {
         let span = tracing::info_span!("package", %package.name);
         let _enter = span.enter();
 
         if !no_tests.contains_key(&package.id.to_string()) {
-            tracing::debug!("all targets has test cases");
-            continue;
+            tracing::debug!("all targets have test cases");
         }
-        let no_test_kinds = no_tests.get(&package.id.to_string()).unwrap();
+        let no_test_kinds = no_tests
+            .get(&package.id.to_string())
+            .map(Clone::clone)
+            .unwrap_or_default();
 
         for target in package.targets {
             if target.is_bench() || target.is_example() || target.is_custom_build() {
@@ -49,7 +53,7 @@ fn main() -> anyhow::Result<()> {
 
             for target_kind in target.kind {
                 let is_test_set = target.test;
-                let has_test = !no_test_kinds.contains(&target_kind.to_string());
+                let has_test = !no_test_kinds.contains(&target_kind);
                 match (is_test_set, has_test) {
                     (true, true) => {
                         tracing::debug!("test=true and has test");
@@ -61,6 +65,7 @@ fn main() -> anyhow::Result<()> {
                     }
                     (false, true) => {
                         tracing::error!("[DANGEROURS] test=false but has test");
+                        fail = true;
                     }
                     (false, false) => {
                         tracing::debug!("test=false and no test");
@@ -68,6 +73,12 @@ fn main() -> anyhow::Result<()> {
                 }
             }
         }
+    }
+
+    if fail {
+        anyhow::bail!(
+            "There are targets with `test=false` but have test cases. You'd better fix it."
+        );
     }
 
     Ok(())
